@@ -12,10 +12,32 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  List<RocketsListModel> filteredRockets = [];
+
   @override
   void initState() {
     super.initState();
     Get.find<HomeScreenController>().fetchRockets();
+    _searchController.addListener(_onSearchChanged); // Add search listener
+  }
+
+  void _onSearchChanged() {
+    final query = _searchController.text.toLowerCase();
+    final homeScreenController = Get.find<HomeScreenController>();
+
+    setState(() {
+      filteredRockets = homeScreenController.rocketsList
+          .where((rocket) =>
+              rocket.name != null && rocket.name!.toLowerCase().contains(query))
+          .toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -24,20 +46,58 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text("Rocket Launcher"),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: RefreshIndicator(
-          onRefresh: () async {
-            Get.find<HomeScreenController>().fetchRockets();
-          },
-          child:
-              GetBuilder<HomeScreenController>(builder: (homeScreenController) {
-            if (homeScreenController.inProgress) {
-              return const Center(
-                  child: SizedBox(child: CircularProgressIndicator()));
-            }
-            return buildListView(homeScreenController.rocketsList);
-          }),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          Get.find<HomeScreenController>().fetchRockets();
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: TextFormField(
+                        controller: _searchController,
+                        decoration: const InputDecoration(
+                          hintText: "Enter Rocket Name",
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: IconButton(
+                        onPressed: () {
+                          _onSearchChanged(); // Trigger search on button press
+                        },
+                        icon: const Icon(Icons.search_rounded),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.7,
+                  child: GetBuilder<HomeScreenController>(
+                      builder: (homeScreenController) {
+                    if (homeScreenController.inProgress) {
+                      return const Center(
+                          child: SizedBox(child: CircularProgressIndicator()));
+                    }
+
+                    // If search query exists, use filtered list, else show full list
+                    final rocketList = _searchController.text.isNotEmpty
+                        ? filteredRockets
+                        : homeScreenController.rocketsList;
+
+                    return buildListView(rocketList);
+                  }),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -45,6 +105,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   ListView buildListView(List<RocketsListModel> rocketList) {
     return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: rocketList.length,
       itemBuilder: (context, index) {
         var imageUrl = rocketList[index].flickrImages != null &&
@@ -58,8 +120,8 @@ class _HomeScreenState extends State<HomeScreen> {
               // Navigate to the details screen, passing the rocket data
               Get.to(() => RocketDetailsScreen(rocket: rocketList[index]));
             },
-            title: Text("${rocketList[index].name}"),
-            subtitle: Text(rocketList[index].firstFlight.toString()),
+            title: Text(rocketList[index].name ?? 'Unknown Rocket'),
+            subtitle: Text(rocketList[index].firstFlight?.toString() ?? 'N/A'),
             leading: SizedBox(
               height: 100,
               width: 100,
