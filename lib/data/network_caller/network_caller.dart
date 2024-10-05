@@ -7,8 +7,9 @@ import 'package:rocket_apps/data/models/network_response.dart';
 class NetworkCaller {
   static Future<NetworkResponse> getRequest({required String url}) async {
     final Response response = await get(Uri.parse(url));
-    print(response.body);
     print(response.statusCode);
+    print(response.body);
+
     try {
       if (response.statusCode == 200) {
         log(response.statusCode);

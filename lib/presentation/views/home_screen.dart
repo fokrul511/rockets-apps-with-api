@@ -24,13 +24,22 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text("Rocket Launcher"),
       ),
-      body: GetBuilder<HomeScreenController>(builder: (homeScreenController) {
-        if (homeScreenController.inProgress) {
-          return const Center(
-              child: SizedBox(height: 120, child: CircularProgressIndicator()));
-        }
-        return buildListView(homeScreenController.rocketsList);
-      }),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            Get.find<HomeScreenController>().fetchRockets();
+          },
+          child:
+              GetBuilder<HomeScreenController>(builder: (homeScreenController) {
+            if (homeScreenController.inProgress) {
+              return const Center(
+                  child: SizedBox(child: CircularProgressIndicator()));
+            }
+            return buildListView(homeScreenController.rocketsList);
+          }),
+        ),
+      ),
     );
   }
 
@@ -38,7 +47,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return ListView.builder(
       itemCount: rocketList.length,
       itemBuilder: (context, index) {
-        var imageUrl = rocketList[index].flickrImages != null && rocketList[index].flickrImages!.isNotEmpty
+        var imageUrl = rocketList[index].flickrImages != null &&
+                rocketList[index].flickrImages!.isNotEmpty
             ? rocketList[index].flickrImages![0]
             : 'https://via.placeholder.com/100';
 
@@ -65,5 +75,4 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
-
 }

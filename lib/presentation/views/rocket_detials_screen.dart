@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rocket_apps/data/models/rocket_list_model.dart';
+import 'package:rocket_apps/presentation/widgets/details_screen_slider.dart';
 
 class RocketDetailsScreen extends StatelessWidget {
   final RocketsListModel rocket;
@@ -18,22 +19,24 @@ class RocketDetailsScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              rocket.flickrImages != null && rocket.flickrImages!.isNotEmpty
-                  ? Image.network(rocket.flickrImages![0])
-                  : const SizedBox(
-                      height: 100, child: Icon(Icons.image_not_supported)),
+              buildImageCarousel(rocket),
+              const SizedBox(height: 16),
               Text(
-                rocket.name ?? '',
+                rocket.name ?? 'Unknown Rocket',
                 style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
+              const SizedBox(height: 16),
+              Text('First Flight: ${rocket.firstFlight ?? 'Unknown'}',
+                  style: const TextStyle(fontSize: 16)),
               const SizedBox(height: 8),
-              Text('First Flight: ${rocket.firstFlight ?? ''}'),
+              Text('Country: ${rocket.country ?? 'Unknown'}',
+                  style: const TextStyle(fontSize: 16)),
               const SizedBox(height: 8),
-              Text('Country: ${rocket.country ?? ''}'),
+              Text('Company: ${rocket.company ?? 'Unknown'}',
+                  style: const TextStyle(fontSize: 16)),
               const SizedBox(height: 8),
-              Text('Company: ${rocket.company ?? ''}'),
-              const SizedBox(height: 8),
-              Text('Description: ${rocket.description ?? ''}'),
+              Text('Description: ${rocket.description ?? 'No description available'}',
+                  style: const TextStyle(fontSize: 16)),
               const SizedBox(height: 16),
             ],
           ),
@@ -41,4 +44,6 @@ class RocketDetailsScreen extends StatelessWidget {
       ),
     );
   }
+
+
 }
